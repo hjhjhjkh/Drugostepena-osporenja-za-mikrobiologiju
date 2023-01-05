@@ -64,7 +64,7 @@ names(procitanXls)[54] <- 'RazlogOsporenja'
 names(procitanXls)[55] <- 'ObrazloženjeOsporenja'
 
 ## Trimuj podatke na samo sta ti treba za XML ----
-kolonePotrebneZaXml <- select(procitanXls, Filijala, Ispostava, Prezime, Ime, LBO, Pol, JMBG, DatumRođenja, BrojZdravstveneIsprave, NosilacOsiguranja, VrstaLečenja, DatumOd, DatumDo, UputnaDijag., Zavr.Dijag., NačinPrijema, NačinOtpusta, OOP, BrojKartona, OO, PoKonvenciji, Država, TipUsluge, SlužbaPrijema, SlužbaOtpusta, LBOordinirajućegLekara, DatumUsluge, ŠifraUsluge, Količina, Cena, LBOlekara, ŠifraSlužbe, ŠifraSlužbeKojaJeTražilaUsl., Org.Jedinica, EksterniIDusluge, RazlogOsporenja, ObrazloženjeOsporenja)
+kolonePotrebneZaXml <- select(procitanXls, Filijala, Ispostava, Prezime, Ime, LBO, Pol, JMBG, DatumRođenja, BrojZdravstveneIsprave, NosilacOsiguranja, VrstaLečenja, DatumOd, DatumDo, UputnaDijag., Zavr.Dijag., NačinPrijema, NačinOtpusta, OOP, BrojKartona, OO, PoKonvenciji, Država, TipUsluge, SlužbaPrijema, SlužbaOtpusta, LBOordinirajućegLekara, DatumUsluge, ŠifraUsluge, Količina, Cena, LBOlekara, ŠifraSlužbe, ŠifraSlužbeKojaJeTražilaUsl., Org.Jedinica, EksterniIDusluge, ObrazloženjeOsporenja)
 
 ## Napravi listu jedinstvenih brojeva kartona ----
 listaJedinstvenihBrojevaKartona <- unique(kolonePotrebneZaXml$BrojKartona)
@@ -95,13 +95,41 @@ for(k in 1:n_distinct(listaJedinstvenihBrojevaKartona)){
   spravljenXML$addTag("DatDo",select (pojedinacniOsiguranik[1,], DatumDo))
   spravljenXML$addTag("UputDij",select (pojedinacniOsiguranik[1,], UputnaDijag.))
   spravljenXML$addTag("ZavrDij",select (pojedinacniOsiguranik[1,], Zavr.Dijag.))
-  spravljenXML$addTag("NacPrijema",select (pojedinacniOsiguranik[1,], NačinPrijema))
-  spravljenXML$addTag("NacOtpusta",select (pojedinacniOsiguranik[1,], NačinOtpusta))
+  # "Nacin prijema" i "Nacin otpusta" - hardcode i ne varijanta (odkomentarisati sta treba po potrebi)
+  #spravljenXML$addTag("NacPrijema",select (pojedinacniOsiguranik[1,], NačinPrijema))
+  #spravljenXML$addTag("NacOtpusta",select (pojedinacniOsiguranik[1,], NačinOtpusta))
+  spravljenXML$addTag("NacPrijema",2) ## !Hardcode!
+  spravljenXML$addTag("NacOtpusta",4) ## !Hardcode!
   spravljenXML$addTag("OOP",select (pojedinacniOsiguranik[1,], OOP))
   spravljenXML$addTag("BrKart",select (pojedinacniOsiguranik[1,], BrojKartona))
   spravljenXML$addTag("OO",select (pojedinacniOsiguranik[1,], OO))
-  spravljenXML$addTag("PoKon",select (pojedinacniOsiguranik[1,], PoKonvenciji))
-  spravljenXML$addTag("Drz",select (pojedinacniOsiguranik[1,], Država))
+  ## Promeni za "PoKonvenciji": True, true, TRUE -> 1; False, false, FALSE -> 0
+  newPoKon <- select (pojedinacniOsiguranik[1,], PoKonvenciji)
+  if(newPoKon == 'True' | newPoKon == 'true' | newPoKon == 'TRUE'){newPoKon <- 1}
+  if(newPoKon == 'False' | newPoKon == 'false' | newPoKon == 'FALSE'){newPoKon <- 0}
+  spravljenXML$addTag("PoKon",newPoKon)
+  newDrzava <- select (pojedinacniOsiguranik[1,], Država)
+  spravljenXML$addTag("Drz", newDrzava)
+  if (is.null(newDrzava) | newDrzava == '' | is.na(newDrzava)) ## Nema drzave slucaj
+  { 
+    spravljenXML$addTag("VrsIspKon",'') ## Zakomentarisi ako ne zelis da se pojavi prazni tag
+    spravljenXML$addTag("BrIspKon",'') ## Zakomentarisi ako ne zelis da se pojavi prazni tag
+    spravljenXML$addTag("NapKon",'') ## Zakomentarisi ako ne zelis da se pojavi prazni tag
+  }
+  else ## Ima drzave slucaj
+  { 
+    brZsrIsp <- select (pojedinacniOsiguranik[1,], BrojZdravstveneIsprave)
+    if (substr(brZsrIsp, 1, 2) == 96)
+    {
+      spravljenXML$addTag("VrsIspKon", "INO1")
+    }
+    else
+    {
+      spravljenXML$addTag("VrsIspKon", "ZK")
+    }
+    spravljenXML$addTag("BrIspKon", brZsrIsp) 
+    spravljenXML$addTag("NapKon",'') ## Zakomentarisi ako ne zelis da se pojavi prazni tag
+  }
   spravljenXML$addTag("TipUsl",select (pojedinacniOsiguranik[1,], TipUsluge))
   spravljenXML$addTag("SifSluPri",select (pojedinacniOsiguranik[1,], SlužbaPrijema))
   spravljenXML$addTag("SifSluOtp",select (pojedinacniOsiguranik[1,], SlužbaOtpusta))
@@ -113,16 +141,15 @@ for(k in 1:n_distinct(listaJedinstvenihBrojevaKartona)){
     spravljenXML$addTag("SifUsl",select (pojedinacniOsiguranik[j,], ŠifraUsluge))
     spravljenXML$addTag("Kol",select (pojedinacniOsiguranik[j,], Količina))
     spravljenXML$addTag("JedCen", sub('\\.', ",", select (pojedinacniOsiguranik[j,], Cena)))## Promeni Cena '.' u ','
-    spravljenXML$addTag("Ucs", 0)
+    spravljenXML$addTag("Ucs", 0) ## !Hardcode!
     spravljenXML$addTag("LBOLekar",select (pojedinacniOsiguranik[j,], LBOlekara))
+    spravljenXML$addTag("ImeLekara", '/') ## !Hardcode!
+    spravljenXML$addTag("PrezLekara", '/') ## !Hardcode!
     spravljenXML$addTag("SifSlu",select (pojedinacniOsiguranik[j,], ŠifraSlužbe))
     spravljenXML$addTag("SifSluUput",select (pojedinacniOsiguranik[j,], ŠifraSlužbeKojaJeTražilaUsl.))
     spravljenXML$addTag("SifOJ",select (pojedinacniOsiguranik[j,], Org.Jedinica))
     spravljenXML$addTag("EksID",select (pojedinacniOsiguranik[j,], EksterniIDusluge))
-    spravljenXML$addTag("Nap",select (pojedinacniOsiguranik[j,], RazlogOsporenja))
-    spravljenXML$addTag("Usluga_atribut",close=F)
-    spravljenXML$addTag("Atribut",select (pojedinacniOsiguranik[j,], ObrazloženjeOsporenja))
-    spravljenXML$closeTag()
+    spravljenXML$addTag("Nap",select (pojedinacniOsiguranik[j,], ObrazloženjeOsporenja))
     spravljenXML$closeTag()
   }
   spravljenXML$closeTag()

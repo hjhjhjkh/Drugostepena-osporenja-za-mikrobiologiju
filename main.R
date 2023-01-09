@@ -15,12 +15,18 @@ library(tidyverse)
 library(readxl)
 
 # Uvezi xls podatke ------------------------------------------------------
-procitanXls <- read_excel("data/avgust 2022.xls")
-
+procitanXls <- read_excel("data/godinuDana2022_semNovembarDecembar/oktobar 2022.xls")
 # Proveri i sredi podatke ------------------------------------------------
 # View(procitanXls) #Pogledaj podatke
+
+## Izbaci ako postoje dve visak kolone "Vrsta Transplantacije" i "Poreklo materijala/leka" (u nekim xls-ovima postoje, u nekim ne, a svakako ne trebaju)
+#print("imena kolona pre izbacivanja kolona:")
+#colnames(procitanXls) #Pogledaj imena kolona
+if (ncol(procitanXls) == 55){procitanXls <-  select(procitanXls, -c('Vrsta Transplantacije', 'Poreklo materijala/leka'))}
+#print("imena kolona posle izbacivanja vrsta transplantacije i poreklo materijala/leka:")
+#colnames(procitanXls) #Pogledaj imena kolona
+
 ## Promeni problematicna imena kolona (treba jedna rec) ----
-# colnames(procitanXls) #Pogledaj imena kolona
 names(procitanXls)[8] <- 'DatumRođenja'
 names(procitanXls)[9] <- 'TelesnaTežinaNaPrijemu'
 names(procitanXls)[10] <- 'BrojZdravstveneIsprave'
@@ -42,36 +48,48 @@ names(procitanXls)[28] <- 'SlužbaPrijema'
 names(procitanXls)[29] <- 'SlužbaOtpusta'
 names(procitanXls)[30] <- 'LBOordinirajućegLekara'
 names(procitanXls)[31] <- 'VrstaEpizodeLečenja'
-names(procitanXls)[32] <- 'VrstaTransplantacije'
-names(procitanXls)[33] <- 'DodatneDijagnoze'
-names(procitanXls)[34] <- 'ListaLekovaDijagnoze'
-names(procitanXls)[35] <- 'DSGšifra'
-names(procitanXls)[36] <- 'DSGkolicina'
-names(procitanXls)[37] <- 'DSGkoeficijent'
-names(procitanXls)[38] <- 'DSGcena'
-names(procitanXls)[39] <- 'KriterijumPrijema'
-names(procitanXls)[41] <- 'DatumUsluge'
-names(procitanXls)[42] <- 'ŠifraUsluge'
-names(procitanXls)[43] <- 'EksterniIDusluge'
-names(procitanXls)[44] <- 'ŠifraMaterijalaLeka'
-names(procitanXls)[45] <- 'PorekloMaterijalaLeka'
-names(procitanXls)[46] <- 'LBOlekara'
-names(procitanXls)[47] <- 'ŠifraSlužbe'
-names(procitanXls)[48] <- 'ŠifraSlužbeKojaJeTražilaUsl.'
-names(procitanXls)[49] <- 'Org.Jedinica'
-names(procitanXls)[53] <- 'OsporenIznos'
-names(procitanXls)[54] <- 'RazlogOsporenja'
-names(procitanXls)[55] <- 'ObrazloženjeOsporenja'
+names(procitanXls)[32] <- 'DodatneDijagnoze'
+names(procitanXls)[33] <- 'ListaLekovaDijagnoze'
+names(procitanXls)[34] <- 'DSGšifra'
+names(procitanXls)[35] <- 'DSGkolicina'
+names(procitanXls)[36] <- 'DSGkoeficijent'
+names(procitanXls)[37] <- 'DSGcena'
+names(procitanXls)[38] <- 'KriterijumPrijema'
+names(procitanXls)[40] <- 'DatumUsluge'
+names(procitanXls)[41] <- 'ŠifraUsluge'
+names(procitanXls)[42] <- 'EksterniIDusluge'
+names(procitanXls)[43] <- 'ŠifraMaterijalaLeka'
+names(procitanXls)[44] <- 'LBOlekara'
+names(procitanXls)[45] <- 'ŠifraSlužbe'
+names(procitanXls)[46] <- 'ŠifraSlužbeKojaJeTražilaUsl.'
+names(procitanXls)[47] <- 'Org.Jedinica'
+names(procitanXls)[51] <- 'OsporenIznos'
+names(procitanXls)[52] <- 'RazlogOsporenja'
+names(procitanXls)[53] <- 'ObrazloženjeOsporenja'
+# print("imena kolona posle promene:")
+# colnames(procitanXls) #Pogledaj imena kolona
 
 ## Trimuj podatke na samo sta ti treba za XML ----
 kolonePotrebneZaXml <- select(procitanXls, Filijala, Ispostava, Prezime, Ime, LBO, Pol, JMBG, DatumRođenja, BrojZdravstveneIsprave, NosilacOsiguranja, VrstaLečenja, DatumOd, DatumDo, UputnaDijag., Zavr.Dijag., NačinPrijema, NačinOtpusta, OOP, BrojKartona, OO, PoKonvenciji, Država, TipUsluge, SlužbaPrijema, SlužbaOtpusta, LBOordinirajućegLekara, DatumUsluge, ŠifraUsluge, Količina, Cena, LBOlekara, ŠifraSlužbe, ŠifraSlužbeKojaJeTražilaUsl., Org.Jedinica, EksterniIDusluge, ObrazloženjeOsporenja)
 
+print (kolonePotrebneZaXml)
+
+## Zameni 'NA' sa praznim stringom
+tryCatch({
+  kolonePotrebneZaXml <- replace(kolonePotrebneZaXml, is.na(kolonePotrebneZaXml), "")
+}, warning = function(w) {
+}, error = function(e) {
+  print ("desio se NA error")
+  # to be bolje hendlovano, za sad reseno tako sto u ekselu receno problematicnoj koloni da formatira ko text (desilo se samo za oktobar)
+}, finally = {
+})
+
+
 ## Napravi listu jedinstvenih brojeva kartona ----
 listaJedinstvenihBrojevaKartona <- unique(kolonePotrebneZaXml$BrojKartona)
-
 # Napravi xml ------------------------------------------------------------
 spravljenXML <-  xmlOutputDOM(tag = "Osiguranici")
-for(k in 1:n_distinct(listaJedinstvenihBrojevaKartona)){
+for(k in 1:length(listaJedinstvenihBrojevaKartona)){
   #print("Sad je broj kartona:")
   #print(listaJedinstvenihBrojevaKartona[k])
   pojedinacniOsiguranik <- filter(kolonePotrebneZaXml, BrojKartona == listaJedinstvenihBrojevaKartona[k])  
@@ -81,7 +99,11 @@ for(k in 1:n_distinct(listaJedinstvenihBrojevaKartona)){
   spravljenXML$addTag("Prez",select (pojedinacniOsiguranik[1,], Prezime))
   spravljenXML$addTag("Ime",select (pojedinacniOsiguranik[1,], Ime))
   spravljenXML$addTag("LBO",select (pojedinacniOsiguranik[1,], LBO))
-  spravljenXML$addTag("Pol",select (pojedinacniOsiguranik[1,], Pol))
+  ## Promeni za "Pol": Muški, muški, MUŠKI -> M; Ženski, ženski, ŽENSKI -> Z
+  newPol <- select (pojedinacniOsiguranik[1,], Pol)
+  if(newPol == 'Muški' | newPol == 'muški' | newPol == 'MUŠKI'){newPol <- "M"}
+  if(newPol == 'Ženski' | newPol == 'ženski' | newPol == 'ŽENSKI'){newPol <- "Z"}
+  spravljenXML$addTag("Pol", newPol)
   spravljenXML$addTag("JMBG",select (pojedinacniOsiguranik[1,], JMBG))
   spravljenXML$addTag("DatRodj",select (pojedinacniOsiguranik[1,], DatumRođenja))
   spravljenXML$addTag("BZK",select (pojedinacniOsiguranik[1,], BrojZdravstveneIsprave))
@@ -143,17 +165,20 @@ for(k in 1:n_distinct(listaJedinstvenihBrojevaKartona)){
     spravljenXML$addTag("JedCen", sub('\\.', ",", select (pojedinacniOsiguranik[j,], Cena)))## Promeni Cena '.' u ','
     spravljenXML$addTag("Ucs", 0) ## !Hardcode!
     spravljenXML$addTag("LBOLekar",select (pojedinacniOsiguranik[j,], LBOlekara))
-    spravljenXML$addTag("ImeLekara", '/') ## !Hardcode!
-    spravljenXML$addTag("PrezLekara", '/') ## !Hardcode!
+    spravljenXML$addTag("ImeLekara", '-') ## !Hardcode!
+    spravljenXML$addTag("PrezLekara", '-') ## !Hardcode!
     spravljenXML$addTag("SifSlu",select (pojedinacniOsiguranik[j,], ŠifraSlužbe))
     spravljenXML$addTag("SifSluUput",select (pojedinacniOsiguranik[j,], ŠifraSlužbeKojaJeTražilaUsl.))
     spravljenXML$addTag("SifOJ",select (pojedinacniOsiguranik[j,], Org.Jedinica))
     spravljenXML$addTag("EksID",select (pojedinacniOsiguranik[j,], EksterniIDusluge))
     spravljenXML$addTag("Nap",select (pojedinacniOsiguranik[j,], ObrazloženjeOsporenja))
+    spravljenXML$addTag("Usluga_atribut",close=F)
+    spravljenXML$addTag("Atribut", '00') ## !Hardcode!
+    spravljenXML$closeTag()
     spravljenXML$closeTag()
   }
   spravljenXML$closeTag()
 }
 
 # Sacuvaj XML ------------------------------------------------------------
-saveXML(spravljenXML$value(),file = "zavrsenXML.xml", prefix = '')
+saveXML(spravljenXML$value(),file = "data/godinuDana2022_semNovembarDecembar_XMLovi/oktobar 2022.xml", prefix = '')

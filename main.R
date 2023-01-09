@@ -17,7 +17,7 @@ library(readxl)
 # Uvezi xls podatke ------------------------------------------------------
 procitanXls <- read_excel("data/godinuDana2022_semNovembarDecembar/mart 2022.xls")
 
-# Sredi podatke ------------------------------------------------------
+# Sredi podatke ----------------------------------------------------------
 ## Izbaci ako postoje dve visak kolone "Vrsta Transplantacije" i "Poreklo materijala/leka" (u nekim xls-ovima postoje, u nekim ne, a svakako ne trebaju) ----
 if (ncol(procitanXls) == 55){procitanXls <-  select(procitanXls, -c('Vrsta Transplantacije', 'Poreklo materijala/leka'))}
 

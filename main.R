@@ -15,9 +15,10 @@ library(tidyverse)
 library(readxl)
 
 # Uvezi xls podatke ------------------------------------------------------
-procitanXls <- read_excel("data/godinuDana2022_semNovembarDecembar/oktobar 2022.xls")
+procitanXls <- read_excel("data/godinuDana2022_semNovembarDecembar/mart 2022.xls")
 
-## Izbaci ako postoje dve visak kolone "Vrsta Transplantacije" i "Poreklo materijala/leka" (u nekim xls-ovima postoje, u nekim ne, a svakako ne trebaju)
+# Sredi podatke ------------------------------------------------------
+## Izbaci ako postoje dve visak kolone "Vrsta Transplantacije" i "Poreklo materijala/leka" (u nekim xls-ovima postoje, u nekim ne, a svakako ne trebaju) ----
 if (ncol(procitanXls) == 55){procitanXls <-  select(procitanXls, -c('Vrsta Transplantacije', 'Poreklo materijala/leka'))}
 
 ## Promeni problematicna imena kolona (treba jedna rec) ----
@@ -66,7 +67,7 @@ names(procitanXls)[53] <- 'ObrazloženjeOsporenja'
 ## Trimuj podatke na samo sta ti treba za XML ----
 kolonePotrebneZaXml <- select(procitanXls, Filijala, Ispostava, Prezime, Ime, LBO, Pol, JMBG, DatumRođenja, BrojZdravstveneIsprave, NosilacOsiguranja, VrstaLečenja, DatumOd, DatumDo, UputnaDijag., Zavr.Dijag., NačinPrijema, NačinOtpusta, OOP, BrojKartona, OO, PoKonvenciji, Država, TipUsluge, SlužbaPrijema, SlužbaOtpusta, LBOordinirajućegLekara, DatumUsluge, ŠifraUsluge, Količina, Cena, LBOlekara, ŠifraSlužbe, ŠifraSlužbeKojaJeTražilaUsl., Org.Jedinica, EksterniIDusluge, ObrazloženjeOsporenja)
 
-## Zameni 'NA' sa praznim stringom
+## Zameni 'NA' sa praznim stringom ----
 tryCatch({
   kolonePotrebneZaXml <- replace(kolonePotrebneZaXml, is.na(kolonePotrebneZaXml), "")
 }, warning = function(w) {
@@ -78,6 +79,7 @@ tryCatch({
 
 ## Napravi listu jedinstvenih brojeva kartona ----
 listaJedinstvenihBrojevaKartona <- unique(kolonePotrebneZaXml$BrojKartona)
+
 # Napravi xml ------------------------------------------------------------
 spravljenXML <-  xmlOutputDOM(tag = "Osiguranici")
 for(k in 1:length(listaJedinstvenihBrojevaKartona)){
@@ -172,4 +174,4 @@ for(k in 1:length(listaJedinstvenihBrojevaKartona)){
 }
 
 # Sacuvaj XML ------------------------------------------------------------
-saveXML(spravljenXML$value(),file = "data/godinuDana2022_semNovembarDecembar_XMLovi/oktobar 2022.xml", prefix = '')
+saveXML(spravljenXML$value(),file = "data/godinuDana2022_semNovembarDecembar_XMLovi/mart 2022.xml", prefix = '')

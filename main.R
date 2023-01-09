@@ -3,7 +3,7 @@
 #' Project title: Drugostepena osporenja za mikrobiologiju
 #' Script name: main.R
 #' Date created: 2022-12-29
-#' Date updated: 2023-01-05
+#' Date updated: 2023-01-09
 #' Author: Milica
 #' Script purpose: .xls u .xml konverzija
 
@@ -73,7 +73,7 @@ tryCatch({
 }, warning = function(w) {
 }, error = function(e) {
   print ("desio se NA error")
-  # to be bolje hendlovano, za sad reseno tako sto u ekselu receno problematicnoj koloni da formatira ko text (desilo se samo za oktobar)
+  # to be bolje hendlovano, za sad reseno tako sto u ekselu receno problematicnoj koloni da formatira ko text (desilo se samo za oktobar za kolonu 'Drzava' error "can`t convert <character> to <double>")
 }, finally = {
 })
 

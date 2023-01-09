@@ -16,15 +16,9 @@ library(readxl)
 
 # Uvezi xls podatke ------------------------------------------------------
 procitanXls <- read_excel("data/godinuDana2022_semNovembarDecembar/oktobar 2022.xls")
-# Proveri i sredi podatke ------------------------------------------------
-# View(procitanXls) #Pogledaj podatke
 
 ## Izbaci ako postoje dve visak kolone "Vrsta Transplantacije" i "Poreklo materijala/leka" (u nekim xls-ovima postoje, u nekim ne, a svakako ne trebaju)
-#print("imena kolona pre izbacivanja kolona:")
-#colnames(procitanXls) #Pogledaj imena kolona
 if (ncol(procitanXls) == 55){procitanXls <-  select(procitanXls, -c('Vrsta Transplantacije', 'Poreklo materijala/leka'))}
-#print("imena kolona posle izbacivanja vrsta transplantacije i poreklo materijala/leka:")
-#colnames(procitanXls) #Pogledaj imena kolona
 
 ## Promeni problematicna imena kolona (treba jedna rec) ----
 names(procitanXls)[8] <- 'DatumRođenja'
@@ -72,8 +66,6 @@ names(procitanXls)[53] <- 'ObrazloženjeOsporenja'
 ## Trimuj podatke na samo sta ti treba za XML ----
 kolonePotrebneZaXml <- select(procitanXls, Filijala, Ispostava, Prezime, Ime, LBO, Pol, JMBG, DatumRođenja, BrojZdravstveneIsprave, NosilacOsiguranja, VrstaLečenja, DatumOd, DatumDo, UputnaDijag., Zavr.Dijag., NačinPrijema, NačinOtpusta, OOP, BrojKartona, OO, PoKonvenciji, Država, TipUsluge, SlužbaPrijema, SlužbaOtpusta, LBOordinirajućegLekara, DatumUsluge, ŠifraUsluge, Količina, Cena, LBOlekara, ŠifraSlužbe, ŠifraSlužbeKojaJeTražilaUsl., Org.Jedinica, EksterniIDusluge, ObrazloženjeOsporenja)
 
-print (kolonePotrebneZaXml)
-
 ## Zameni 'NA' sa praznim stringom
 tryCatch({
   kolonePotrebneZaXml <- replace(kolonePotrebneZaXml, is.na(kolonePotrebneZaXml), "")
@@ -83,7 +75,6 @@ tryCatch({
   # to be bolje hendlovano, za sad reseno tako sto u ekselu receno problematicnoj koloni da formatira ko text (desilo se samo za oktobar)
 }, finally = {
 })
-
 
 ## Napravi listu jedinstvenih brojeva kartona ----
 listaJedinstvenihBrojevaKartona <- unique(kolonePotrebneZaXml$BrojKartona)

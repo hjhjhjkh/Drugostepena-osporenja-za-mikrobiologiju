@@ -15,7 +15,8 @@ library(tidyverse)
 library(readxl)
 
 # Uvezi xls podatke ------------------------------------------------------
-procitanXls <- read_excel("data/godinuDana2022_semNovembarDecembar/mart 2022.xls")
+ucesceKolonaOdsutna <- FALSE
+procitanXls <- read_excel("data/god_2022_c_latest/godinuDana_2022_XLSs/Cela_2022_plus_Ucesca.xls")
 
 # Sredi podatke ----------------------------------------------------------
 ## Izbaci ako postoje dve visak kolone "Vrsta Transplantacije" i "Poreklo materijala/leka" (u nekim xls-ovima postoje, u nekim ne, a svakako ne trebaju) ----
@@ -65,7 +66,11 @@ names(procitanXls)[53] <- 'ObrazloženjeOsporenja'
 # colnames(procitanXls) #Pogledaj imena kolona
 
 ## Trimuj podatke na samo sta ti treba za XML ----
-kolonePotrebneZaXml <- select(procitanXls, Filijala, Ispostava, Prezime, Ime, LBO, Pol, JMBG, DatumRođenja, BrojZdravstveneIsprave, NosilacOsiguranja, VrstaLečenja, DatumOd, DatumDo, UputnaDijag., Zavr.Dijag., NačinPrijema, NačinOtpusta, OOP, BrojKartona, OO, PoKonvenciji, Država, TipUsluge, SlužbaPrijema, SlužbaOtpusta, LBOordinirajućegLekara, DatumUsluge, ŠifraUsluge, Količina, Cena, LBOlekara, ŠifraSlužbe, ŠifraSlužbeKojaJeTražilaUsl., Org.Jedinica, EksterniIDusluge, ObrazloženjeOsporenja)
+if (ucesceKolonaOdsutna){ 
+  kolonePotrebneZaXml <- select(procitanXls, Filijala, Ispostava, Prezime, Ime, LBO, Pol, JMBG, DatumRođenja, BrojZdravstveneIsprave, NosilacOsiguranja, VrstaLečenja, DatumOd, DatumDo, UputnaDijag., Zavr.Dijag., NačinPrijema, NačinOtpusta, OOP, BrojKartona, OO, PoKonvenciji, Država, TipUsluge, SlužbaPrijema, SlužbaOtpusta, LBOordinirajućegLekara, DatumUsluge, ŠifraUsluge, Količina, Cena, LBOlekara, ŠifraSlužbe, ŠifraSlužbeKojaJeTražilaUsl., Org.Jedinica, EksterniIDusluge, ObrazloženjeOsporenja)
+} else {
+  kolonePotrebneZaXml <- select(procitanXls, Filijala, Ispostava, Prezime, Ime, LBO, Pol, JMBG, DatumRođenja, BrojZdravstveneIsprave, NosilacOsiguranja, VrstaLečenja, DatumOd, DatumDo, UputnaDijag., Zavr.Dijag., NačinPrijema, NačinOtpusta, OOP, BrojKartona, OO, PoKonvenciji, Država, TipUsluge, SlužbaPrijema, SlužbaOtpusta, LBOordinirajućegLekara, DatumUsluge, ŠifraUsluge, Količina, Cena, LBOlekara, ŠifraSlužbe, ŠifraSlužbeKojaJeTražilaUsl., Org.Jedinica, EksterniIDusluge, ObrazloženjeOsporenja, Ucesce)
+}
 
 ## Zameni 'NA' sa praznim stringom ----
 tryCatch({
@@ -73,12 +78,16 @@ tryCatch({
 }, warning = function(w) {
 }, error = function(e) {
   print ("desio se NA error")
-  # to be bolje hendlovano, za sad reseno tako sto u ekselu receno problematicnoj koloni da formatira ko text (desilo se samo za oktobar za kolonu 'Drzava' error "can`t convert <character> to <double>")
+  # to be bolje hendlovano, za sad reseno tako sto u ekselu receno problematicnoj koloni da formatira ko text (desilo se samo za oktobar za kolonu 'Drzava' error "can`t convert <character> to <double>" i kad sam dodavala "Ucesce" resila sa kopiranjem pa editovanjem "Drzava" kolone rucno)
 }, finally = {
 })
 
 ## Napravi listu jedinstvenih brojeva kartona ----
 listaJedinstvenihBrojevaKartona <- unique(kolonePotrebneZaXml$BrojKartona)
+# print ("Lista svih jedinstvenih brojeva kartona:")
+# print (listaJedinstvenihBrojevaKartona)
+# print ("Duzina lista svih jedinstvenih brojeva kartona:")
+# print (length(listaJedinstvenihBrojevaKartona))
 
 # Napravi xml ------------------------------------------------------------
 spravljenXML <-  xmlOutputDOM(tag = "Osiguranici")
@@ -118,11 +127,21 @@ for(k in 1:length(listaJedinstvenihBrojevaKartona)){
   spravljenXML$addTag("OOP",select (pojedinacniOsiguranik[1,], OOP))
   spravljenXML$addTag("BrKart",select (pojedinacniOsiguranik[1,], BrojKartona))
   spravljenXML$addTag("OO",select (pojedinacniOsiguranik[1,], OO))
-  ## Promeni za "PoKonvenciji": True, true, TRUE -> 1; False, false, FALSE -> 0
-  newPoKon <- select (pojedinacniOsiguranik[1,], PoKonvenciji)
-  if(newPoKon == 'True' | newPoKon == 'true' | newPoKon == 'TRUE'){newPoKon <- 1}
-  if(newPoKon == 'False' | newPoKon == 'false' | newPoKon == 'FALSE'){newPoKon <- 0}
-  spravljenXML$addTag("PoKon",newPoKon)
+  
+  ## Dve alternative za "Po konvenciji" logiku: A/ true/false iz xls-a (deprecated) B/prema drzavi (aktuelno) 
+  ## A/ Promeni za "PoKonvenciji": True, true, TRUE -> 1; False, false, FALSE -> 0
+  # newPoKon <- select (pojedinacniOsiguranik[1,], PoKonvenciji)
+  # if(newPoKon == 'True' | newPoKon == 'true' | newPoKon == 'TRUE'){newPoKon <- 1}
+  # if(newPoKon == 'False' | newPoKon == 'false' | newPoKon == 'FALSE'){newPoKon <- 0}
+  # spravljenXML$addTag("PoKon",newPoKon)
+  ## B/
+  if (is.null(select (pojedinacniOsiguranik[1,], Država)) | select (pojedinacniOsiguranik[1,], Država) == '' | is.na(select (pojedinacniOsiguranik[1,], Država))){ 
+    spravljenXML$addTag("PoKon",'0')
+  }
+  else{
+    spravljenXML$addTag("PoKon",'1')
+  }
+  
   newDrzava <- select (pojedinacniOsiguranik[1,], Država)
   spravljenXML$addTag("Drz", newDrzava)
   if (is.null(newDrzava) | newDrzava == '' | is.na(newDrzava)) ## Nema drzave slucaj
@@ -156,7 +175,18 @@ for(k in 1:length(listaJedinstvenihBrojevaKartona)){
     spravljenXML$addTag("SifUsl",select (pojedinacniOsiguranik[j,], ŠifraUsluge))
     spravljenXML$addTag("Kol",select (pojedinacniOsiguranik[j,], Količina))
     spravljenXML$addTag("JedCen", sub('\\.', ",", select (pojedinacniOsiguranik[j,], Cena)))## Promeni Cena '.' u ','
-    spravljenXML$addTag("Ucs", 0) ## !Hardcode!
+    ## ucesce zavisno dal postoji kolona u XLSu ili ne 
+    if (ucesceKolonaOdsutna){ 
+        spravljenXML$addTag("Ucs", 0)
+    } else {
+      newUcs <- select (pojedinacniOsiguranik[j,], Ucesce)
+      if (is.null(newUcs) | newUcs == '' | is.na(newUcs)){## Nema ucesca slucaj
+        spravljenXML$addTag("Ucs", 0)
+      }
+      else{
+        spravljenXML$addTag("Ucs", newUcs)## Ima ucesca slucaj
+      }
+    }
     spravljenXML$addTag("LBOLekar",select (pojedinacniOsiguranik[j,], LBOlekara))
     spravljenXML$addTag("ImeLekara", '-') ## !Hardcode!
     spravljenXML$addTag("PrezLekara", '-') ## !Hardcode!
@@ -174,4 +204,4 @@ for(k in 1:length(listaJedinstvenihBrojevaKartona)){
 }
 
 # Sacuvaj XML ------------------------------------------------------------
-saveXML(spravljenXML$value(),file = "data/godinuDana2022_semNovembarDecembar_XMLovi/mart 2022.xml", prefix = '')
+saveXML(spravljenXML$value(),file = "data/god_2022_c_latest/godinuDana_2022_XMLs/Cela_2022_plus_Ucesca.xml", prefix = '')

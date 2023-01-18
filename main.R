@@ -3,7 +3,7 @@
 #' Project title: Drugostepena osporenja za mikrobiologiju
 #' Script name: main.R
 #' Date created: 2022-12-29
-#' Date updated: 2023-01-11
+#' Date updated: 2023-01-18
 #' Author: Milica
 #' Script purpose: .xls u .xml konverzija
 
@@ -14,13 +14,24 @@ library(XML)
 library(tidyverse)
 library(readxl)
 
-# Uvezi xls podatke ------------------------------------------------------
-ucesceKolonaOdsutna <- FALSE
-procitanXls <- read_excel("data/god_2022_c_latest/godinuDana_2022_XLSs/Cela_2022_plus_Ucesca.xls")
+# Uvezi i proveri iz eksela uvezene podatke -------------------------------
+ucesceKolonaOdsutna <- TRUE
+procitanXls <- read_excel("data/god_2021/godinuDana_2021_XLSs/Cela_2021.xls")
+## Pogledaj ako ima upozorenja i ucitane podatke pogledaj ---- 
+#warnings() # "Expecting logical in Z..." = Z kolona iz eksela pogresno pogodjen tip
+#View(procitanXls)
+# 
+## R za ucitane podatke nagadja tip podatka za svaku kolonu; ako neko upozorenje indikuje da pogresno pogodio specificiraj tip ---- 
+## Prema uputstvu sa https://readxl.tidyverse.org/articles/cell-and-column-types.html
+## Specificiraj tip podatka za jednu kolonu ostale nek pogadja (preporuceno za samo problematicne kolone)
+## ili 
+## Specificiraj tip podatka za sve kolone (manje preporuceno, moguci novi problemi, do sada primeceno da specificiranje tipa "text" remeti brojeve oblika xx,xx)
+#procitanXls <- read_excel("data/god_2021/godinuDana_2021_XLSs/Cela_2022_plus.xls", col_types = c("guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "text", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess", "guess"))
+#procitanXls <- read_excel("data/god_2021/godinuDana_2021_XLSs/Cela_2022_plus.xls", col_types = "text")
 
 # Sredi podatke ----------------------------------------------------------
 ## Izbaci ako postoje dve visak kolone "Vrsta Transplantacije" i "Poreklo materijala/leka" (u nekim xls-ovima postoje, u nekim ne, a svakako ne trebaju) ----
-if (ncol(procitanXls) == 55){procitanXls <-  select(procitanXls, -c('Vrsta Transplantacije', 'Poreklo materijala/leka'))}
+ if (ncol(procitanXls) == 55){procitanXls <-  select(procitanXls, -c('Vrsta Transplantacije', 'Poreklo materijala/leka'))}
 
 ## Promeni problematicna imena kolona (treba jedna rec) ----
 names(procitanXls)[8] <- 'DatumRođenja'
@@ -84,10 +95,10 @@ tryCatch({
 
 ## Napravi listu jedinstvenih brojeva kartona ----
 listaJedinstvenihBrojevaKartona <- unique(kolonePotrebneZaXml$BrojKartona)
-# print ("Lista svih jedinstvenih brojeva kartona:")
-# print (listaJedinstvenihBrojevaKartona)
-# print ("Duzina lista svih jedinstvenih brojeva kartona:")
-# print (length(listaJedinstvenihBrojevaKartona))
+ # print ("Lista svih jedinstvenih brojeva kartona:")
+ # print (listaJedinstvenihBrojevaKartona)
+ # print ("Duzina lista svih jedinstvenih brojeva kartona:")
+ # print (length(listaJedinstvenihBrojevaKartona))
 
 # Napravi xml ------------------------------------------------------------
 spravljenXML <-  xmlOutputDOM(tag = "Osiguranici")
@@ -204,4 +215,4 @@ for(k in 1:length(listaJedinstvenihBrojevaKartona)){
 }
 
 # Sacuvaj XML ------------------------------------------------------------
-saveXML(spravljenXML$value(),file = "data/god_2022_c_latest/godinuDana_2022_XMLs/Cela_2022_plus_Ucesca.xml", prefix = '')
+saveXML(spravljenXML$value(),file = "data/god_2021/godinuDana_2021_XMLs/Cela_2021_plus_Ucesca.xml", prefix = '')

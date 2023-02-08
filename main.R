@@ -129,11 +129,11 @@ for(k in 1:length(listaJedinstvenihBrojevaKartona)){
   spravljenXML$addTag("DatOd",select (pojedinacniOsiguranik[1,], DatumOd))
   spravljenXML$addTag("DatDo",select (pojedinacniOsiguranik[1,], DatumDo))
   spravljenXML$addTag("UputDij",select (pojedinacniOsiguranik[1,], UputnaDijag.))
-  spravljenXML$addTag("ZavrDij",select (pojedinacniOsiguranik[1,], Zavr.Dijag.))
   # "Nacin prijema" i "Nacin otpusta" - hardcode i ne varijanta (odkomentarisati sta treba po potrebi)
   #spravljenXML$addTag("NacPrijema",select (pojedinacniOsiguranik[1,], NačinPrijema))
   #spravljenXML$addTag("NacOtpusta",select (pojedinacniOsiguranik[1,], NačinOtpusta))
   spravljenXML$addTag("NacPrijema",2) ## !Hardcode!
+  spravljenXML$addTag("ZavrDij",select (pojedinacniOsiguranik[1,], Zavr.Dijag.))
   spravljenXML$addTag("NacOtpusta",4) ## !Hardcode!
   spravljenXML$addTag("OOP",select (pojedinacniOsiguranik[1,], OOP))
   spravljenXML$addTag("BrKart",select (pojedinacniOsiguranik[1,], BrojKartona))
